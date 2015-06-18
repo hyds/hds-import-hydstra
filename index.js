@@ -4,18 +4,21 @@ var https = require('https');
 var http = require('http');
 
 //npm modules
-var split = require('split');
-var split2 = require('split2');
-var url = require('url');
-var req = require('request');
-
-var domain = require('domain'),
-reqDomain = domain.create();
 var bunyan = require('bunyan');
 var log = bunyan.createLogger({name: "hyd-imp"});
 var moment = require('moment');
 
 var clone = require('clone');
+
+var split = require('split');
+var split2 = require('split2');
+
+var domain = require('domain'),
+reqDomain = domain.create();
+
+var url = require('url');
+
+var req = require('request');
 
 var levelup = require('levelup');
 var db = levelup('./tableSchemas');
@@ -24,7 +27,8 @@ dbOptions['db'] = db;
     
 //custom modules
 var hydstraTools = require('./scripts');
-var URIs = hydstraTools.uris();
+var requests = require('./requests');
+var URIs = hydstraTools.uris(); 
 var config = require('./config');
 
 //var webservices = config.services;
@@ -38,33 +42,33 @@ for (orgcode in URIs) {
     if (!URIs.hasOwnProperty(orgcode)) { continue }
     //log.info('orgcode: ', orgcode);
     var URLList = URIs[orgcode];
-    callURLList(orgcode,URLList);    
+    //callURLList(orgcode,URLList);    
     var URInumber = 0;
     //console.log('URLList',URLList);
-    //loopServices(URLList, URInumber);
+    loopServices(orgcode, URInumber, URLList);
     
 }
 
-function callURLList(orgcode,URLList){
-    for (var i = 0; i < URLList.length ; i++) {
-      //var webservice = webservices[i];
-      //webservice['query'] = query;
-      log.info('orgcode: ', URLList[i].orgcode);
-      //log.info('params: ', URLList[i].query.params);
-      //var months = monthIncrement;
-      //var c = 0;
-      // requestTable(URLList[i],function(data){
-      //   log.info(data);
-      // });
-      var URL = {}
-      URL = clone(URLList[i]); 
-      var URInumber = 0;
-      console.log('i [',i,'], URL [',URL,']');
+// function callURLList(orgcode,URLList){
+//     for (var i = 0; i < URLList.length ; i++) {
+//       //var webservice = webservices[i];
+//       //webservice['query'] = query;
+//       log.info('orgcode: ', URLList[i].orgcode);
+//       //log.info('params: ', URLList[i].query.params);
+//       //var months = monthIncrement;
+//       //var c = 0;
+//       // requestTable(URLList[i],function(data){
+//       //   log.info(data);
+//       // });
+//       var URL = {}
+//       URL = clone(URLList[i]); 
+//       var URInumber = 0;
+//       console.log('i [',i,'], URL [',URL,']');
 
-      //loopServices(URL, URInumber);
+//       //loopServices(URL, URInumber);
       
-    }    
-}
+//     }    
+// }
 
 
 // loopURI(URLList[i], URInumber, param, table, function(){
@@ -73,19 +77,78 @@ function callURLList(orgcode,URLList){
 
 
 
-function loopServices( urls , URInumber ){
-    var URL = urls[URInumber];
-    //log.info('lookup [',URInumber,'],  orgcode: ',url.orgcode, ', table: ', url.table);
+function loopServices(orgcode, URInumber, urls ){
+    var URLitem = clone(urls[URInumber]);
+    log.info('lookup [',URInumber,'],  orgcode: ',URLitem.orgcode, ', urls.length: ', urls.length);
     //console.log('URInumber < URLList.length',URInumber ,'<', URLList.length)
-    //console.log('URRLists[URInumber]',URL)
-    // requestTable( URL , URInumber, function(){
-    //     if ( URInumber < urls.length ){
-    //         URInumber++;
-    //         var urlist = urls[URInumber];
-    //         loopServices( urlist , URInumber);
-    //     }
-    // });
+    //console.log('URRLists[URInumber]',URLitem)
+    requests.requestTable( URLitem , URInumber, function(){
+        if ( URInumber < urls.length ){
+            URInumber++;
+            var urlist = clone(urls[URInumber]);
+            loopServices( orgcode, urlist , URInumber);
+        }
+    });
 }
+
+
+function requestTable (urlitem,URInumber,callback){
+    console.log('urlitem',urlitem);
+    var query = JSON.stringify(urlitem.query);
+    var options = urlitem.options;
+    var orgcode = urlitem.orgcode;
+    var table = urlitem.table;
+    //var schemaId = webservice.schemaId;
+    
+    var devFile =  __dirname + '/data/'+orgcode+'.json';
+
+    var uriUnparsed = 'http://' + urlitem.host + urlitem.path + query;
+    
+    //var uriUnparsed = 'http://' + webservice.host + webservice.path + JSON.stringify(webservice.query);
+    dbOptions['table'] = table;
+    var test = 1;
+    //if (webservice.decode){
+    if ( test ){
+        uri = url.parse(uriUnparsed)
+        uri.path = decodeURIComponent(uri.path);
+        
+        URIoptions['uri'] = uri;
+    }
+    else{
+        URIoptions = 'http://' + urlitem.host + urlitem.path + query;
+    }
+    
+    reqDomain.on('error', function(err) {
+        log.error('Error caught in request domain: ' + err);
+    });
+
+    reqDomain.run(function() {
+      //log.info('query: ',URIoptions);
+
+      req.get(URIoptions)
+        .pipe(split2())
+        .pipe(hydstraTools.cleanReturn())
+        .pipe(hydstraTools.lookupSchemaId(dbOptions))
+        //.pipe(hydstraTools.generateMetaSchema())
+        // .pipe(hydstraTools.loginToGFC())
+        //.pipe(hydstraTools.createSchema())
+        // .pipe(hydstraTools.loginToCompanyTable())
+        // .pipe(hydstraTools.createTableSchemaAssociation()) // this will return the schema _id for a company-table 
+        
+        .pipe(hydstraTools.createRecord())
+        .pipe(fs.createWriteStream(devFile))
+        //.resume()
+        .on('close',function(){
+          log.info('close [',orgcode,']');
+           setTimeout( function(){
+              callback();
+              //rr.removeAllListeners();
+           },1000);
+        })        
+    })
+}
+
+
 
 
 //         if( y < filterParams.length ) {
@@ -227,59 +290,3 @@ function loopServices( urls , URInumber ){
 //         }
 //     });
 // }
-
-function requestTable (urlitem,URInumber,callback){
-    console.log('urlitem',urlitem);
-    // var query = JSON.stringify(urlitem.query);
-    // var options = urlitem.options;
-    // var orgcode = urlitem.orgcode;
-    // var table = urlitem.table;
-    // //var schemaId = webservice.schemaId;
-    
-    // var devFile =  __dirname + '/data/'+orgcode+'.json';
-
-    // var uriUnparsed = 'http://' + urlitem.host + urlitem.path + query;
-    
-    // //var uriUnparsed = 'http://' + webservice.host + webservice.path + JSON.stringify(webservice.query);
-    // dbOptions['table'] = table;
-    // var test = 1;
-    // //if (webservice.decode){
-    // if ( test ){
-    //     uri = url.parse(uriUnparsed)
-    //     uri.path = decodeURIComponent(uri.path);
-        
-    //     URIoptions['uri'] = uri;
-    // }
-    // else{
-    //     URIoptions = 'http://' + urlitem.host + urlitem.path + query;
-    // }
-    
-    // reqDomain.on('error', function(err) {
-    //     log.error('Error caught in request domain: ' + err);
-    // });
-
-    // reqDomain.run(function() {
-    //   //log.info('query: ',URIoptions);
-
-    //   req.get(URIoptions)
-    //     .pipe(split2())
-    //     .pipe(hydstraTools.cleanReturn())
-    //     .pipe(hydstraTools.lookupSchemaId(dbOptions))
-    //     //.pipe(hydstraTools.generateMetaSchema())
-    //     // .pipe(hydstraTools.loginToGFC())
-    //     //.pipe(hydstraTools.createSchema())
-    //     // .pipe(hydstraTools.loginToCompanyTable())
-    //     // .pipe(hydstraTools.createTableSchemaAssociation()) // this will return the schema _id for a company-table 
-        
-    //     .pipe(hydstraTools.createRecord())
-    //     .pipe(fs.createWriteStream(devFile))
-    //     //.resume()
-    //     .on('close',function(){
-    //       log.info('close [',orgcode,']');
-    //        setTimeout( function(){
-    //           callback();
-    //           //rr.removeAllListeners();
-    //        },1000);
-    //     })        
-    // })
-}
