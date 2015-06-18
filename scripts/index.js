@@ -8,6 +8,6 @@ module.exports = {
     createSchema: require('./createSchema'),
     createRecord: require('./createRecord'),
     lookupSchemaId: require('./lookupSchemaId'),
-    siteList: require('./siteList'),
+    //siteList: require('./siteList'),
     uris: require('./uris')
 };

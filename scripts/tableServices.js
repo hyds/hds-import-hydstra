@@ -18,5 +18,6 @@ module.exports = function (){
             orgcodeTables[orgcode].push(tableService);
         }
     }
+    //console.log('orgcodeTables',orgcodeTables);
     return orgcodeTables;
 }

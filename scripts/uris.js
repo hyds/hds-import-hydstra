@@ -5,9 +5,12 @@ var clone = require('clone');
 
 module.exports = function (){
     var orgURIs = {};
+    var count = 0;
     for (orgcode in tableServices) {
         if (!tableServices.hasOwnProperty(orgcode)) { continue }
+        count++;
         orgURIs[orgcode] = [];
+        console.log('urirs [', count, '] org :',orgcode); //,', url.query: ',orgURIs[orgcode])
         var orgcodeTables = tableServices[orgcode];
         for (var i = 0; i < orgcodeTables.length ; i++) {
             var url = clone(orgcodeTables[i]);
@@ -17,11 +20,15 @@ module.exports = function (){
                 query.params.sitelist_filter = clone(matchParams[h]);
                 //query.params.table_name = matchParams[h]; 
                 url['query'] = clone(query);
-                orgURIs[orgcode].push(url);
+                orgURIs[orgcode].push(clone(url));
                 //console.log('url.query: ',url.query)
             }
         }
     }
-    //console.log('orgURIs',orgURIs);
+    // console.log('orgURIs',orgURIs);
+    // for (orgcode in tableServices) {
+    //     if (!tableServices.hasOwnProperty(orgcode)) { continue }
+     
+    // }
     return orgURIs;
 }
