@@ -10,17 +10,21 @@ reqDomain = domain.create();
 
 var fs = require('fs');
 
-var db = levelup('.../tableSchemas');
+var db = levelup('../tableSchemas');
 var dbOptions = {};
 dbOptions['db'] = db;
     
 //custom modules
 var hydstraTools = require('../scripts');
 
-
-module.exports = function (urlitem,URInumber,callback){
+module.exports = function (options,callback){
     console.log('urlitem',urlitem);
+    var urlitem = options.urlItem;
+    var URInumber = options.uriNumber;
+    var log = options.log;
+
     var URIoptions = {'pool': {'maxSockets': Infinity},'keepAlive':false};
+    
     var query = JSON.stringify(urlitem.query);
     var options = urlitem.options;
     var orgcode = urlitem.orgcode;
