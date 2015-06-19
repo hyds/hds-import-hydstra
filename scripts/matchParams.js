@@ -4,11 +4,11 @@ module.exports = function (){
 	var siteListFilters = [];
   for (var i = 0; i < filterParams.length; i++) {
     var one = filterParams[i];
-    for (var y = 0; y < filterParams.length; y++) {
-      var filter = 'match('+ one + filterParams[y] + '*)'; 
-      //var filter = 'match('+ one + '*)'; 
+    //for (var y = 0; y < filterParams.length; y++) {
+    //  var filter = 'match('+ one + filterParams[y] + '*)'; 
+      var filter = 'match('+ one + '*)'; 
       siteListFilters.push(filter);
-    }
+    //}
   }
   return siteListFilters;  
 }

@@ -10,7 +10,7 @@ module.exports = function (){
         if (!tableServices.hasOwnProperty(orgcode)) { continue }
         count++;
         orgURIs[orgcode] = [];
-        console.log('urirs [', count, '] org :',orgcode); //,', url.query: ',orgURIs[orgcode])
+        //console.log('urirs [', count, '] org :',orgcode); //,', url.query: ',orgURIs[orgcode])
         var orgcodeTables = tableServices[orgcode];
         for (var i = 0; i < orgcodeTables.length ; i++) {
             var url = clone(orgcodeTables[i]);
@@ -18,10 +18,10 @@ module.exports = function (){
             query.params.table_name = orgcodeTables[i].table;
             for (var h = 0; h < matchParams.length; h++) {
                 query.params.sitelist_filter = clone(matchParams[h]);
-                //query.params.table_name = matchParams[h]; 
                 url['query'] = clone(query);
+                url['decode'] = orgcodeTables[i].decode;
                 orgURIs[orgcode].push(clone(url));
-                //console.log('url.query: ',url.query)
+                
             }
         }
     }

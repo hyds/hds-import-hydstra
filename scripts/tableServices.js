@@ -14,6 +14,7 @@ module.exports = function (){
             tableService['orgcode'] = webservice.orgcode;
             tableService['host'] = webservice.options.host;
             tableService['path'] = webservice.options.path; 
+            tableService['decode'] = webservice.decode; 
             tableService['table'] = table;             
             orgcodeTables[orgcode].push(tableService);
         }
