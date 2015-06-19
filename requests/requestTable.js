@@ -51,7 +51,7 @@ module.exports = function (options,callback){
     }
     
     reqDomain.on('error', function(err) {
-        log.error('Error caught in request domain: ' + err);
+        log.error('Error caught in request domain: ' + err + uriUnparsed );
     });
 
     reqDomain.run(function() {
@@ -59,7 +59,7 @@ module.exports = function (options,callback){
       log.info('URI # [',URInumber,']');//,'urlitem',urlitem);
       //console.log('URInumber',URInumber,'] URIoptions',URIoptions);//,'urlitem',urlitem);
     
-        req.get(URIoptions)
+        var r = req.get(URIoptions)
             .pipe(split2())
             .pipe(hydstraTools.cleanReturn())
             .pipe(hydstraTools.lookupSchemaId(dbOptions))
@@ -72,13 +72,21 @@ module.exports = function (options,callback){
             .pipe(hydstraTools.createRecord())
             .pipe(fs.createWriteStream(devFile))
             //.resume()
-            .on('close',function(){
-              log.info('close [',orgcode,'] #[',URInumber,'], table[',table,']');
-               setTimeout( function(){
-                  return callback();
-                  //rr.removeAllListeners();
-               },1000)
-            })
-            .end()        
+             .on('close',function(){
+               log.info('close [',orgcode,'] #[',URInumber,'], table[',table,']');
+                setTimeout( function(){
+                   return callback();
+                   //rr.removeAllListeners();
+                },1000)
+             });
+        
+	r.on('end',function(){
+               log.info('close [',orgcode,'] #[',URInumber,'], table[',table,']');
+                setTimeout( function(){
+                   return callback();
+                   //rr.removeAllListeners();
+                },1000)
+             });
+	r.end();   
     })
 }
