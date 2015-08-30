@@ -1,6 +1,9 @@
 var through = require('through2');
-var baseUrl = 'http://localhost:8080/',
-    makeRequest = require('request');
+var host = process.argv[2] || '54.153.175.138';
+var port = process.argv[3] || 8081;
+
+var baseUrl = 'http://'+host+':'+port+'/';
+var makeRequest = require('request');
     //token = '2f6b43db34b1f685c99695f85f0c0f3d'; // comes from login
     //token = '55640dcd78ecc2be1214f49e;'
 
@@ -45,8 +48,8 @@ function login(data){
             url: baseUrl + 'login',
             method: 'POST',
             json: {
-                userName: 'admin',
-                password: 'linuxminty1$'
+                userName: 'gfc',
+                password: 'gfctest'
             }
         },
         function(error, response, body){

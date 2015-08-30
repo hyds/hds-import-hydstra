@@ -40,6 +40,7 @@ function login(schema){
         function(error, response, body){
             if (error){console.log("error: ", error)};
             var token = body.token; 
+            console.log('body',body);
             for (table in schema){
                 if (!schema.hasOwnProperty(table)){ continue; }
                 var tableDefinition = schema[table];
